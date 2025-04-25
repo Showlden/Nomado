@@ -5,7 +5,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 AUTH_USER_MODEL = "account.User"
 SECRET_KEY = 'django-insecure-3ggia+0r0q4wq1l5$$r($3gql4(5#1^ytt63=+ixg((cp#2*bd'
 DEBUG = True
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['127.0.0.1']
 
 
 # Application definition
@@ -18,15 +18,14 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     
+    'account',
+    'tour',
+    
     'rest_framework',
     'drf_spectacular',
     'rest_framework_simplejwt',
     'django_filters',
     'corsheaders',
-
-    
-    'account.apps.AccountConfig',
-    'tour.apps.TourConfig',
 ]
 
 MIDDLEWARE = [
@@ -43,7 +42,6 @@ MIDDLEWARE = [
 ROOT_URLCONF = 'core.urls'
 
 CORS_ALLOW_ALL_ORIGINS = True
-ALLOWED_HOSTS = ['nomado.onrender.com']
 
 TEMPLATES = [
     {
@@ -79,13 +77,16 @@ REST_FRAMEWORK = {
     "DEFAULT_RENDERER_CLASSES": [
         'rest_framework.renderers.JSONRenderer',
     ],
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
     'DATETIME_FORMAT': "%Y-%m-%dT%H:%M:%S.%fZ",
     'DEFAULT_TIME_ZONE': 'Asia/Bishkek',
 }
 
 SPECTACULAR_SETTINGS = {
-    'TITLE': 'PLIT-99 API',
+    'TITLE': 'NOMADO API',
     'DESCRIPTION': 'SWAGGER FOR ENDPOINTS',
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
