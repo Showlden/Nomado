@@ -1,6 +1,7 @@
 "use client"
 
 import type React from "react"
+
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
 
 interface User {
@@ -47,15 +48,21 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         const savedUser = localStorage.getItem("user")
 
         if (savedToken && savedUser) {
-            setToken(savedToken)
-            setUser(JSON.parse(savedUser))
+            try {
+                setToken(savedToken)
+                setUser(JSON.parse(savedUser))
+            } catch (error) {
+                console.error("Error parsing saved user data:", error)
+                localStorage.removeItem("token")
+                localStorage.removeItem("user")
+            }
         }
         setIsLoading(false)
     }, [])
 
     const login = async (email: string, password: string) => {
         try {
-            const response = await fetch("http://127.0.0.1:8000/api/auth/login/", {
+            const response = await fetch("http://localhost:8000/api/auth/login/", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -63,16 +70,27 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 body: JSON.stringify({ email, password }),
             })
 
+            const data = await response.json()
+
             if (!response.ok) {
-                throw new Error("Login failed")
+                throw new Error(data.detail || data.message || "Login failed")
             }
 
-            const data = await response.json()
+            // Assuming your Django backend returns user data along with token
+            const userData = {
+                id: data.user_id || data.user?.id,
+                email: data.email || data.user?.email || email,
+                first_name: data.first_name || data.user?.first_name || "",
+                last_name: data.last_name || data.user?.last_name || "",
+                is_staff: data.is_staff || data.user?.is_staff || false,
+            }
+
             setToken(data.access)
-            setUser(data.user)
+            setUser(userData)
             localStorage.setItem("token", data.access)
-            localStorage.setItem("user", JSON.stringify(data.user))
+            localStorage.setItem("user", JSON.stringify(userData))
         } catch (error) {
+            console.error("Login error:", error)
             throw error
         }
     }
@@ -87,16 +105,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 body: JSON.stringify(userData),
             })
 
+            const data = await response.json()
+
             if (!response.ok) {
-                throw new Error("Registration failed")
+                throw new Error(data.detail || data.message || "Registration failed")
             }
 
-            const data = await response.json()
-            setToken(data.access)
-            setUser(data.user)
-            localStorage.setItem("token", data.access)
-            localStorage.setItem("user", JSON.stringify(data.user))
+            // After successful registration, log the user in
+            await login(userData.email, userData.password)
         } catch (error) {
+            console.error("Registration error:", error)
             throw error
         }
     }
